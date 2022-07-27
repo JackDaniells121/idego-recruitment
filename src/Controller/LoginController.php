@@ -2,12 +2,8 @@
 
 namespace App\Controller;
 
+use App\Model\UserCollection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Form\Extension\Core\Type\DateType;
-use Symfony\Component\Form\Extension\Core\Type\EmailType;
-use Symfony\Component\Form\Extension\Core\Type\PasswordType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,9 +11,13 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class LoginController extends AbstractController
 {
-    protected $session;
+    protected \Symfony\Component\HttpFoundation\Session\SessionInterface $session;
+    protected string $otp = '111111';
 
-    public function __construct( RequestStack $requestStack)
+    public function __construct(
+        RequestStack $requestStack,
+        protected $userCollection = new UserCollection()
+    )
     {
         $this->session = $requestStack->getSession();
     }
@@ -36,8 +36,8 @@ class LoginController extends AbstractController
 
         return $this->render('login/index.html.twig', [
             'controller_name' => 'LoginController',
+            'error' => $this->session->get('error'),
         ]);
-
     }
 
     #[Route('/login', name: 'login')]
@@ -46,15 +46,31 @@ class LoginController extends AbstractController
         $email = $request->get('email');
         $password = $request->get('password');
 
-        if ($email) {
-            $this->session->set('email', $email);
+        if ($email && $password) {
 
-            // TODO: check hardcoded email
+            $user = $this->userCollection->findUser($email, $password);
+
+            if ($user) {
+
+                $this->session->set('email', $email);
+
+                if ($user->otpEnabled()) {
+
+                    return $this->render('login/otp.html.twig');
+                }
+                else {
+                    $this->session->set('logged', 'true');
+                }
+            }
+            else {
+                // not found in users collection
+                $this->session->set('error', 'Incorrect email or password');
+            }
         }
         else {
-            return $this->redirectToRoute('start');
+            $this->session->set('error', 'Incorrect email or password');
         }
-        return $this->render('login/otp.html.twig');
+        return $this->redirectToRoute('start');
     }
 
     #[Route('/otp', name: 'otp')]
@@ -63,9 +79,11 @@ class LoginController extends AbstractController
         $email = $this->session->get('email');
         $otp = $request->get('otp');
 
-        if ($email && $otp == '111111') {
+        if ($email && $otp == $this->otp) {
             $this->session->set('logged', 'true');
         }
+
+        $this->session->set('error', 'Incorrect One Time Password');
 
         return $this->redirectToRoute('start');
     }
@@ -75,6 +93,8 @@ class LoginController extends AbstractController
     {
         $this->session->set('logged', 'false');
         $this->session->set('email', '');
+
+        $this->session->set('error', 'You have been logged out');
 
         return $this->redirectToRoute('start');
     }

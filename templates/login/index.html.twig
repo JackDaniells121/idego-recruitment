@@ -26,9 +26,7 @@
         <div id="show-error" hidden>No validation error yet!</div>
     </form>
 
-    <button onClick="showSnack()">Show snack</button>
-    <!-- The actual snackbar -->
-    <div id="snackbar">User with that mail does not exists..</div>
+    <div id="snackbar">{{ error }}</div>
 </div>
 
 <script type="application/javascript">
@@ -37,7 +35,6 @@
         const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
         return re.test(String(email).toLowerCase());
     }
-
 
     function runValidation(email) {
         let validEmail = validateEmail(email);
@@ -64,6 +61,10 @@
 
         // After 3 seconds, remove the show class from DIV
         setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+    }
+
+    if ('{{ error }}' != '') {
+        showSnack();
     }
 </script>
 
