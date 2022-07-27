@@ -20,3 +20,6 @@ Implement login page with two step authentication and error handling* Login form
 5. Test credentials :
    1. email: test@test.pl / password: 1 / otp: 111111
    2. email: test2@test.pl / password: 1
+   
+   
+   ![Zrzut ekranu 2022-07-27 o 19 33 55](https://user-images.githubusercontent.com/35567187/181312295-792321d4-56f9-4dd2-b420-7cd810b8e4a1.png)
